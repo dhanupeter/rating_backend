@@ -1,7 +1,7 @@
-using Google.Cloud.Spanner.Data;
-using Rating.API.Models;
-using Rating.API.DTOs;
 using System.Collections.Concurrent;
+using Google.Cloud.Spanner.Data;
+using Rating.API.DTOs;
+using Rating.API.Models;
 
 namespace Rating.API.Services;
 
@@ -12,10 +12,11 @@ public class SpannerService : ISpannerService
     private readonly string _connectionString;
     private readonly bool _useCloudSpanner;
 
-    private static readonly ConcurrentDictionary<string, Entity> _entities = new();
-    private static readonly ConcurrentDictionary<string, RatingCriteria> _criteria = new();
-    private static readonly ConcurrentDictionary<string, Issue> _issues = new();
-    private static readonly ConcurrentDictionary<string, UserProfile> _users = new();
+    // Fast in-memory cache
+    private readonly ConcurrentDictionary<string, Entity> _entities = new();
+    private readonly ConcurrentDictionary<string, RatingCriteria> _criteria = new();
+    private readonly ConcurrentDictionary<string, Issue> _issues = new();
+    private readonly ConcurrentDictionary<string, UserProfile> _users = new();
 
     public SpannerService(IConfiguration configuration, ILogger<SpannerService> logger)
     {
@@ -25,7 +26,7 @@ public class SpannerService : ISpannerService
         var projectId = _configuration["Spanner:ProjectId"] ?? "event-506117";
         var instanceId = _configuration["Spanner:InstanceId"] ?? "event-spanner";
         var databaseId = _configuration["Spanner:DatabaseId"] ?? "rating";
-        _useCloudSpanner = _configuration.GetValue<bool>("Spanner:EnableCloudSpanner");
+        _useCloudSpanner = _configuration.GetValue<bool>("Spanner:EnableCloudSpanner", true);
 
         _connectionString = $"Data Source=projects/{projectId}/instances/{instanceId}/databases/{databaseId}";
 
@@ -118,8 +119,24 @@ public class SpannerService : ISpannerService
                 {
                     ["Quality / Freshness"] = 4.8,
                     ["Service & Staff"] = 4.6,
-                    ["Cleanliness & Ambience"] = 4.7,
-                    ["Pricing & Value"] = 4.6
+                    ["Cleanliness"] = 4.7
+                },
+                RecentReviews = new List<Review>
+                {
+                    new Review
+                    {
+                        EntityId = "ent-kannan-store",
+                        ReviewId = "rev-k-1",
+                        UserId = "user-dhanu",
+                        UserName = "Dhanu Peter",
+                        UserPhotoUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
+                        OverallRating = 5.0,
+                        Title = "Best organic produce and fast billing",
+                        ReviewText = "Consistently fresh vegetables every morning and very clean aisles.",
+                        VerificationLevel = 2,
+                        HelpfulVotes = 42,
+                        CreatedAt = DateTime.UtcNow.AddDays(-2)
+                    }
                 }
             };
 
@@ -130,11 +147,10 @@ public class SpannerService : ISpannerService
                 Category = "South Indian Restaurant",
                 Name = "Hotel Saravana Bhavan",
                 Brand = "Saravana Bhavan",
-                Model = "Restaurant",
-                Description = "Authentic South Indian vegetarian breakfast, crisp ghee roasts and filter coffee.",
+                Description = "Station Road, Old Bus Stand, Tiruppur. Authentic crispy ghee roasts, hot filter coffee, and mini-meals.",
                 ExternalProvider = "Geoapify",
                 ImageUrl = "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600",
-                OverallRating = 4.8,
+                OverallRating = 4.9,
                 TotalReviews = 812,
                 VerifiedReviews = 640,
                 Locations = new List<EntityLocation>
@@ -143,7 +159,7 @@ public class SpannerService : ISpannerService
                     {
                         EntityId = "ent-saravana-tiruppur",
                         LocationId = "loc-sb-1",
-                        Name = "Station Road Branch",
+                        Name = "Tiruppur Junction",
                         AddressLine1 = "Station Road, Old Bus Stand",
                         City = "Tiruppur",
                         State = "Tamil Nadu",
@@ -157,7 +173,7 @@ public class SpannerService : ISpannerService
                     ["Quality / Taste"] = 4.9,
                     ["Service & Staff"] = 4.7,
                     ["Cleanliness & Ambience"] = 4.8,
-                    ["Pricing & Value"] = 4.6
+                    ["Pricing & Value"] = 4.7
                 }
             };
 
@@ -165,23 +181,21 @@ public class SpannerService : ISpannerService
             {
                 EntityId = "ent-boat-450",
                 EntityType = "PRODUCT",
-                Category = "Headphones & Audio",
+                Category = "Audio & Headphones",
                 Name = "boAt Rockerz 450",
                 Brand = "boAt",
                 Model = "Rockerz 450",
-                Description = "On-ear wireless Bluetooth headphones with 40mm dynamic drivers, 15H playback.",
-                ExternalUrl = "https://www.boat-lifestyle.com/products/rockerz-450",
-                ExternalProvider = "Amazon",
+                Description = "Wireless Bluetooth on-ear headphones with 40mm dynamic drivers, 15H playback, and padded ear cushions.",
                 ImageUrl = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600",
-                OverallRating = 4.4,
+                OverallRating = 4.6,
                 TotalReviews = 1240,
                 VerifiedReviews = 980,
                 CriteriaAverages = new Dictionary<string, double>
                 {
-                    ["Build Quality"] = 4.2,
+                    ["Build Quality"] = 4.4,
                     ["Performance & Sound"] = 4.7,
                     ["Value for Money"] = 4.8,
-                    ["Comfort & Design"] = 4.3
+                    ["Comfort & Design"] = 4.5
                 }
             };
         }
@@ -193,10 +207,10 @@ public class SpannerService : ISpannerService
                 IssueId = "iss-001",
                 Title = "Exposed High-Voltage Cable Near School Zone",
                 Category = "Electrical Safety",
-                Description = "An open underground cable junction is exposed on the pedestrian walkway in front of Municipal High School.",
-                Location = "Kumaran Road, Near Bus Stand, Tiruppur",
+                Description = "Open underground cable junction exposed on the pedestrian walkway in front of Municipal High School.",
+                Location = "Kumaran Road, Near Old Bus Stand, Tiruppur",
                 Latitude = 11.1070,
-                Longitude = 77.3420,
+                Longitude = 77.3450,
                 ImageUrl = "https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?w=600",
                 Status = "Under Review",
                 ConfirmationsCount = 28,
@@ -227,7 +241,7 @@ public class SpannerService : ISpannerService
     }
 
     // Entities
-    public Task<List<Entity>> GetAllEntitiesAsync(string? type = null, string? category = null)
+    public async Task<List<Entity>> GetAllEntitiesAsync(string? type = null, string? category = null)
     {
         var list = _entities.Values.AsEnumerable();
         if (!string.IsNullOrEmpty(type) && type != "ALL")
@@ -238,30 +252,31 @@ public class SpannerService : ISpannerService
         {
             list = list.Where(e => e.Category.Equals(category, StringComparison.OrdinalIgnoreCase));
         }
-        return Task.FromResult(list.ToList());
+        return await Task.FromResult(list.ToList());
     }
 
-    public Task<Entity?> GetEntityByIdAsync(string entityId)
+    public async Task<Entity?> GetEntityByIdAsync(string entityId)
     {
         _entities.TryGetValue(entityId, out var entity);
-        return Task.FromResult(entity);
+        return await Task.FromResult(entity);
     }
 
-    public Task<List<Entity>> SearchEntitiesAsync(string query)
+    public async Task<List<Entity>> SearchEntitiesAsync(string query)
     {
         var list = _entities.Values.Where(e =>
             e.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
             e.Category.Contains(query, StringComparison.OrdinalIgnoreCase) ||
             (e.Brand != null && e.Brand.Contains(query, StringComparison.OrdinalIgnoreCase))
         ).ToList();
-        return Task.FromResult(list);
+        return await Task.FromResult(list);
     }
 
-    public Task<Entity> CreateEntityAsync(CreateEntityRequest request)
+    public async Task<Entity> CreateEntityAsync(CreateEntityRequest request)
     {
+        var entityId = Guid.NewGuid().ToString("N");
         var entity = new Entity
         {
-            EntityId = Guid.NewGuid().ToString("N"),
+            EntityId = entityId,
             Name = request.Name,
             EntityType = request.EntityType,
             Category = request.Category,
@@ -275,7 +290,8 @@ public class SpannerService : ISpannerService
                 {
                     new EntityLocation
                     {
-                        EntityId = Guid.NewGuid().ToString("N"),
+                        EntityId = entityId,
+                        LocationId = Guid.NewGuid().ToString("N"),
                         Name = request.Name,
                         AddressLine1 = request.Location,
                         City = "Tiruppur",
@@ -289,30 +305,63 @@ public class SpannerService : ISpannerService
         };
 
         _entities[entity.EntityId] = entity;
-        return Task.FromResult(entity);
+
+        // Persist to Cloud Spanner
+        if (_useCloudSpanner)
+        {
+            try
+            {
+                using var connection = new SpannerConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var cmd = connection.CreateInsertOrUpdateCommand("Entities", new SpannerParameterCollection
+                {
+                    { "EntityId", SpannerDbType.String, entity.EntityId },
+                    { "EntityType", SpannerDbType.String, entity.EntityType },
+                    { "Category", SpannerDbType.String, entity.Category },
+                    { "Name", SpannerDbType.String, entity.Name },
+                    { "Description", SpannerDbType.String, entity.Description },
+                    { "ImageUrl", SpannerDbType.String, entity.ImageUrl },
+                    { "OverallRating", SpannerDbType.Float64, entity.OverallRating },
+                    { "TotalReviews", SpannerDbType.Int64, (long)entity.TotalReviews },
+                    { "VerifiedReviews", SpannerDbType.Int64, (long)entity.VerifiedReviews },
+                    { "CreatedAt", SpannerDbType.Timestamp, entity.CreatedAt },
+                    { "UpdatedAt", SpannerDbType.Timestamp, DateTime.UtcNow }
+                });
+
+                await cmd.ExecuteNonQueryAsync();
+                _logger.LogInformation("Wrote Entity {EntityId} to Cloud Spanner Entities table", entity.EntityId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not write Entity to Spanner directly: {Message}", ex.Message);
+            }
+        }
+
+        return entity;
     }
 
     // Dynamic Criteria
-    public Task<List<RatingCriteria>> GetCriteriaByEntityTypeAsync(string entityType)
+    public async Task<List<RatingCriteria>> GetCriteriaByEntityTypeAsync(string entityType)
     {
         var list = _criteria.Values
             .Where(c => c.EntityType.Equals(entityType, StringComparison.OrdinalIgnoreCase))
             .OrderBy(c => c.DisplayOrder)
             .ToList();
-        return Task.FromResult(list);
+        return await Task.FromResult(list);
     }
 
     // Reviews
-    public Task<List<Review>> GetReviewsByEntityIdAsync(string entityId)
+    public async Task<List<Review>> GetReviewsByEntityIdAsync(string entityId)
     {
         if (_entities.TryGetValue(entityId, out var entity))
         {
-            return Task.FromResult(entity.RecentReviews);
+            return await Task.FromResult(entity.RecentReviews);
         }
-        return Task.FromResult(new List<Review>());
+        return await Task.FromResult(new List<Review>());
     }
 
-    public Task<Review> AddReviewAsync(string entityId, CreateReviewRequest request)
+    public async Task<Review> AddReviewAsync(string entityId, CreateReviewRequest request)
     {
         var review = new Review
         {
@@ -355,10 +404,41 @@ public class SpannerService : ISpannerService
             entity.OverallRating = Math.Round(entity.RecentReviews.Average(r => r.OverallRating), 1);
         }
 
-        return Task.FromResult(review);
+        // Persist to Cloud Spanner Reviews Table
+        if (_useCloudSpanner)
+        {
+            try
+            {
+                using var connection = new SpannerConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var cmd = connection.CreateInsertOrUpdateCommand("Reviews", new SpannerParameterCollection
+                {
+                    { "ReviewId", SpannerDbType.String, review.ReviewId },
+                    { "EntityId", SpannerDbType.String, review.EntityId },
+                    { "UserId", SpannerDbType.String, review.UserId },
+                    { "Title", SpannerDbType.String, review.Title },
+                    { "ReviewText", SpannerDbType.String, review.ReviewText },
+                    { "OverallRating", SpannerDbType.Float64, review.OverallRating },
+                    { "VerificationLevel", SpannerDbType.Int64, (long)review.VerificationLevel },
+                    { "HelpfulVotes", SpannerDbType.Int64, (long)review.HelpfulVotes },
+                    { "CreatedAt", SpannerDbType.Timestamp, review.CreatedAt },
+                    { "UpdatedAt", SpannerDbType.Timestamp, DateTime.UtcNow }
+                });
+
+                await cmd.ExecuteNonQueryAsync();
+                _logger.LogInformation("Wrote Review {ReviewId} to Cloud Spanner Reviews table", review.ReviewId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not write Review to Spanner directly: {Message}", ex.Message);
+            }
+        }
+
+        return review;
     }
 
-    public Task<bool> VoteHelpfulAsync(string entityId, string reviewId, string userId)
+    public async Task<bool> VoteHelpfulAsync(string entityId, string reviewId, string userId)
     {
         if (_entities.TryGetValue(entityId, out var entity))
         {
@@ -366,14 +446,14 @@ public class SpannerService : ISpannerService
             if (rev != null)
             {
                 rev.HelpfulVotes++;
-                return Task.FromResult(true);
+                return await Task.FromResult(true);
             }
         }
-        return Task.FromResult(false);
+        return await Task.FromResult(false);
     }
 
     // Issues
-    public Task<List<Issue>> GetAllIssuesAsync(string? status = null, string? category = null)
+    public async Task<List<Issue>> GetAllIssuesAsync(string? status = null, string? category = null)
     {
         var list = _issues.Values.AsEnumerable();
         if (!string.IsNullOrEmpty(status))
@@ -384,16 +464,16 @@ public class SpannerService : ISpannerService
         {
             list = list.Where(i => i.Category.Equals(category, StringComparison.OrdinalIgnoreCase));
         }
-        return Task.FromResult(list.OrderByDescending(i => i.CreatedAt).ToList());
+        return await Task.FromResult(list.OrderByDescending(i => i.CreatedAt).ToList());
     }
 
-    public Task<Issue?> GetIssueByIdAsync(string issueId)
+    public async Task<Issue?> GetIssueByIdAsync(string issueId)
     {
         _issues.TryGetValue(issueId, out var issue);
-        return Task.FromResult(issue);
+        return await Task.FromResult(issue);
     }
 
-    public Task<Issue> CreateIssueAsync(CreateIssueRequest request)
+    public async Task<Issue> CreateIssueAsync(CreateIssueRequest request)
     {
         var issue = new Issue
         {
@@ -411,20 +491,54 @@ public class SpannerService : ISpannerService
             ReportedByUserName = "Dhanu Peter"
         };
         _issues[issue.IssueId] = issue;
-        return Task.FromResult(issue);
+
+        // Persist to Cloud Spanner Issues Table
+        if (_useCloudSpanner)
+        {
+            try
+            {
+                using var connection = new SpannerConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var cmd = connection.CreateInsertOrUpdateCommand("Issues", new SpannerParameterCollection
+                {
+                    { "IssueId", SpannerDbType.String, issue.IssueId },
+                    { "Title", SpannerDbType.String, issue.Title },
+                    { "Category", SpannerDbType.String, issue.Category },
+                    { "Description", SpannerDbType.String, issue.Description },
+                    { "Location", SpannerDbType.String, issue.Location },
+                    { "ImageUrl", SpannerDbType.String, issue.ImageUrl },
+                    { "Status", SpannerDbType.String, issue.Status },
+                    { "ConfirmationsCount", SpannerDbType.Int64, (long)issue.ConfirmationsCount },
+                    { "ReportedByUserId", SpannerDbType.String, issue.ReportedByUserId },
+                    { "ReportedByUserName", SpannerDbType.String, issue.ReportedByUserName },
+                    { "CreatedAt", SpannerDbType.Timestamp, issue.CreatedAt },
+                    { "UpdatedAt", SpannerDbType.Timestamp, DateTime.UtcNow }
+                });
+
+                await cmd.ExecuteNonQueryAsync();
+                _logger.LogInformation("Wrote Issue {IssueId} to Cloud Spanner Issues table", issue.IssueId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not write Issue to Spanner: {Message}", ex.Message);
+            }
+        }
+
+        return issue;
     }
 
-    public Task<bool> ConfirmIssueAsync(string issueId, string userId)
+    public async Task<bool> ConfirmIssueAsync(string issueId, string userId)
     {
         if (_issues.TryGetValue(issueId, out var issue))
         {
             issue.ConfirmationsCount++;
-            return Task.FromResult(true);
+            return await Task.FromResult(true);
         }
-        return Task.FromResult(false);
+        return await Task.FromResult(false);
     }
 
-    public Task<Issue?> UpdateIssueStatusAsync(string issueId, UpdateIssueStatusRequest request)
+    public async Task<Issue?> UpdateIssueStatusAsync(string issueId, UpdateIssueStatusRequest request)
     {
         if (_issues.TryGetValue(issueId, out var issue))
         {
@@ -432,17 +546,17 @@ public class SpannerService : ISpannerService
             issue.OfficialResponse = request.OfficialResponse;
             issue.RespondedBy = request.RespondedBy;
             issue.UpdatedAt = DateTime.UtcNow;
-            return Task.FromResult<Issue?>(issue);
+            return await Task.FromResult<Issue?>(issue);
         }
-        return Task.FromResult<Issue?>(null);
+        return await Task.FromResult<Issue?>(null);
     }
 
     // User Profile
-    public Task<UserProfile> GetUserProfileAsync(string userId)
+    public async Task<UserProfile> GetUserProfileAsync(string userId)
     {
         if (_users.TryGetValue(userId, out var user))
         {
-            return Task.FromResult(user);
+            return await Task.FromResult(user);
         }
         var newUser = new UserProfile
         {
@@ -452,12 +566,45 @@ public class SpannerService : ISpannerService
             ReputationScore = 100
         };
         _users[userId] = newUser;
-        return Task.FromResult(newUser);
+        return await Task.FromResult(newUser);
     }
 
-    public Task<UserProfile> UpdateUserProfileAsync(UserProfile profile)
+    public async Task<UserProfile> UpdateUserProfileAsync(UserProfile profile)
     {
         _users[profile.UserId] = profile;
-        return Task.FromResult(profile);
+
+        // Persist directly to Google Cloud Spanner UserProfiles table
+        if (_useCloudSpanner)
+        {
+            try
+            {
+                using var connection = new SpannerConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var cmd = connection.CreateInsertOrUpdateCommand("UserProfiles", new SpannerParameterCollection
+                {
+                    { "UserId", SpannerDbType.String, profile.UserId },
+                    { "FullName", SpannerDbType.String, profile.FullName ?? "User" },
+                    { "Email", SpannerDbType.String, profile.Email ?? "" },
+                    { "PhoneNumber", SpannerDbType.String, profile.PhoneNumber ?? "" },
+                    { "PhotoUrl", SpannerDbType.String, profile.PhotoUrl ?? "" },
+                    { "ReputationScore", SpannerDbType.Int64, (long)profile.ReputationScore },
+                    { "VerifiedReviewsCount", SpannerDbType.Int64, (long)profile.VerifiedReviewsCount },
+                    { "HelpfulVotesCount", SpannerDbType.Int64, (long)profile.HelpfulVotesCount },
+                    { "IsVerified", SpannerDbType.Bool, profile.IsVerified },
+                    { "CreatedAt", SpannerDbType.Timestamp, profile.CreatedAt },
+                    { "UpdatedAt", SpannerDbType.Timestamp, DateTime.UtcNow }
+                });
+
+                await cmd.ExecuteNonQueryAsync();
+                _logger.LogInformation("Persisted UserProfile {UserId} to Cloud Spanner UserProfiles table", profile.UserId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not persist UserProfile to Spanner: {Message}", ex.Message);
+            }
+        }
+
+        return profile;
     }
 }

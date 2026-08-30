@@ -13,6 +13,7 @@ builder.Services.AddSingleton<ISpannerService, SpannerService>();
 builder.Services.AddSingleton<INotificationService, FirebaseNotificationService>();
 builder.Services.AddSingleton<ILocationService, GeoapifyLocationService>();
 builder.Services.AddSingleton<IAuditLogService, AuditLogService>();
+builder.Services.AddSingleton<GooglePlacesService>();
 
 // CORS configuration for Flutter mobile & web clients
 builder.Services.AddCors(options =>

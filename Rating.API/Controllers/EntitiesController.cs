@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Rating.API.DTOs;
 using Rating.API.Models;
 using Rating.API.Services;
@@ -10,12 +10,25 @@ namespace Rating.API.Controllers;
 public class EntitiesController : ControllerBase
 {
     private readonly ISpannerService _spannerService;
+    private readonly GooglePlacesService _placesService;
     private readonly ILogger<EntitiesController> _logger;
 
-    public EntitiesController(ISpannerService spannerService, ILogger<EntitiesController> logger)
+    public EntitiesController(ISpannerService spannerService, GooglePlacesService placesService, ILogger<EntitiesController> logger)
     {
         _spannerService = spannerService;
+        _placesService = placesService;
         _logger = logger;
+    }
+
+    [HttpGet("nearby")]
+    public async Task<ActionResult<List<Entity>>> GetNearby(
+        [FromQuery] double lat,
+        [FromQuery] double lng,
+        [FromQuery] int radius = 5000,
+        [FromQuery] string? category = null)
+    {
+        var places = await _placesService.SearchNearbyAsync(lat, lng, radius, category);
+        return Ok(places);
     }
 
     [HttpGet]
