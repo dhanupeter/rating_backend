@@ -391,7 +391,9 @@ public class SpannerService : ISpannerService
 
     public async Task<UserProfile> UpdateUserProfileAsync(UserProfile profile)
     {
-        _users[profile.UserId] = profile;
+        var uid = profile.UserId ?? Guid.NewGuid().ToString("N");
+        profile.UserId = uid;
+        _users[uid] = profile;
 
         if (_useCloudSpanner)
         {
@@ -402,21 +404,21 @@ public class SpannerService : ISpannerService
 
                 var cmd = connection.CreateInsertOrUpdateCommand("UserProfiles", new SpannerParameterCollection
                 {
-                    { "UserId", SpannerDbType.String, profile.UserId },
+                    { "UserId", SpannerDbType.String, uid },
                     { "FullName", SpannerDbType.String, profile.FullName ?? "User" },
                     { "Email", SpannerDbType.String, profile.Email ?? "" },
                     { "PhoneNumber", SpannerDbType.String, profile.PhoneNumber ?? "" },
                     { "PhotoUrl", SpannerDbType.String, profile.PhotoUrl ?? "" },
-                    { "ReputationScore", SpannerDbType.Int64, (long)profile.ReputationScore },
-                    { "VerifiedReviewsCount", SpannerDbType.Int64, (long)profile.VerifiedReviewsCount },
-                    { "HelpfulVotesCount", SpannerDbType.Int64, (long)profile.HelpfulVotesCount },
-                    { "IsVerified", SpannerDbType.Bool, profile.IsVerified },
-                    { "CreatedAt", SpannerDbType.Timestamp, profile.CreatedAt },
+                    { "ReputationScore", SpannerDbType.Int64, profile.ReputationScore ?? 100L },
+                    { "VerifiedReviewsCount", SpannerDbType.Int64, profile.VerifiedReviewsCount ?? 0L },
+                    { "HelpfulVotesCount", SpannerDbType.Int64, profile.HelpfulVotesCount ?? 0L },
+                    { "IsVerified", SpannerDbType.Bool, profile.IsVerified ?? true },
+                    { "CreatedAt", SpannerDbType.Timestamp, profile.CreatedAt ?? DateTime.UtcNow },
                     { "UpdatedAt", SpannerDbType.Timestamp, DateTime.UtcNow }
                 });
 
                 await cmd.ExecuteNonQueryAsync();
-                _logger.LogInformation("Wrote UserProfile {UserId} directly to Cloud Spanner", profile.UserId);
+                _logger.LogInformation("Wrote UserProfile {UserId} directly to Cloud Spanner", uid);
             }
             catch (Exception ex)
             {

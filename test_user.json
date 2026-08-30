@@ -1,0 +1,16 @@
+{
+  "userId": "user-dhanu-live",
+  "fullName": "Dhanu Peter",
+  "email": "dhanupeter@gmail.com",
+  "phoneNumber": "+919876543210",
+  "photoUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200",
+  "reputationScore": 100,
+  "verifiedReviewsCount": 0,
+  "helpfulVotesCount": 0,
+  "badges": [
+    "🏆 Community Member",
+    "📍 Local Explorer"
+  ],
+  "isVerified": true,
+  "createdAt": "2026-08-30T13:23:00.000Z"
+}
