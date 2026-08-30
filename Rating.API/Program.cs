@@ -1,4 +1,4 @@
-﻿using Rating.API.Services;
+using Rating.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,11 +6,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
 
-// Register Cloud Spanner / Repository Service
+// Core Services
 builder.Services.AddSingleton<ISpannerService, SpannerService>();
+builder.Services.AddSingleton<INotificationService, FirebaseNotificationService>();
+builder.Services.AddSingleton<ILocationService, GeoapifyLocationService>();
+builder.Services.AddSingleton<IAuditLogService, AuditLogService>();
 
-// Enable CORS for mobile & web clients
+// CORS configuration for Flutter mobile & web clients
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -25,16 +29,10 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Rate Anything API v1");
-    c.RoutePrefix = string.Empty; // Serve Swagger at root /
-});
+app.UseSwaggerUI();
 
 app.UseCors("AllowAll");
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

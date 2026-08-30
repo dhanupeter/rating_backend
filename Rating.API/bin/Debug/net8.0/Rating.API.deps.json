@@ -8,12 +8,26 @@
     ".NETCoreApp,Version=v8.0": {
       "Rating.API/1.0.0": {
         "dependencies": {
+          "FirebaseAdmin": "3.1.0",
           "Google.Cloud.Spanner.Data": "5.12.0",
           "Microsoft.AspNetCore.OpenApi": "8.0.23",
           "Swashbuckle.AspNetCore": "6.6.2"
         },
         "runtime": {
           "Rating.API.dll": {}
+        }
+      },
+      "FirebaseAdmin/3.1.0": {
+        "dependencies": {
+          "Google.Api.Gax.Rest": "4.8.0",
+          "Google.Apis.Auth": "1.72.0",
+          "System.Collections.Immutable": "8.0.0"
+        },
+        "runtime": {
+          "lib/net6.0/FirebaseAdmin.dll": {
+            "assemblyVersion": "3.1.0.0",
+            "fileVersion": "3.1.0.0"
+          }
         }
       },
       "Google.Api.CommonProtos/2.17.0": {
@@ -54,6 +68,19 @@
           "lib/netstandard2.0/Google.Api.Gax.Grpc.dll": {
             "assemblyVersion": "4.12.1.0",
             "fileVersion": "4.12.1.0"
+          }
+        }
+      },
+      "Google.Api.Gax.Rest/4.8.0": {
+        "dependencies": {
+          "Google.Api.Gax": "4.12.1",
+          "Google.Apis.Auth": "1.72.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Google.Api.Gax.Rest.dll": {
+            "assemblyVersion": "4.8.0.0",
+            "fileVersion": "4.8.0.0"
           }
         }
       },
@@ -321,6 +348,7 @@
           }
         }
       },
+      "System.Collections.Immutable/8.0.0": {},
       "System.Diagnostics.DiagnosticSource/6.0.2": {},
       "System.Management/7.0.2": {
         "dependencies": {
@@ -349,6 +377,13 @@
       "serviceable": false,
       "sha512": ""
     },
+    "FirebaseAdmin/3.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-QNafwBg5psTGKOIyo78sNYjJ9GI5z/TPqOgpyOOv+2nzeK8sVaIPT2eDpcgzpxcRcKbjISbel38cQH/pIHNeOA==",
+      "path": "firebaseadmin/3.1.0",
+      "hashPath": "firebaseadmin.3.1.0.nupkg.sha512"
+    },
     "Google.Api.CommonProtos/2.17.0": {
       "type": "package",
       "serviceable": true,
@@ -369,6 +404,13 @@
       "sha512": "sha512-W3LjuitOWxWyvbwqeHvpgp0LdshEiTnw/pneDAfAhQ02VgU2gVEzSXfGNPsvL8hDPBXjngR/fWNme8Kungwwkw==",
       "path": "google.api.gax.grpc/4.12.1",
       "hashPath": "google.api.gax.grpc.4.12.1.nupkg.sha512"
+    },
+    "Google.Api.Gax.Rest/4.8.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-zaA5LZ2VvGj/wwIzRB68swr7khi2kWNgqWvsB0fYtScIAl3kGkGtqiBcx63H1YLeKr5xau1866bFjTeReH6FSQ==",
+      "path": "google.api.gax.rest/4.8.0",
+      "hashPath": "google.api.gax.rest.4.8.0.nupkg.sha512"
     },
     "Google.Apis/1.72.0": {
       "type": "package",
@@ -572,6 +614,13 @@
       "sha512": "sha512-GLltyqEsE5/3IE+zYRP5sNa1l44qKl9v+bfdMcwg+M9qnQf47wK3H0SUR/T+3N4JEQXF3vV4CSuuo0rsg+nq2A==",
       "path": "system.codedom/7.0.0",
       "hashPath": "system.codedom.7.0.0.nupkg.sha512"
+    },
+    "System.Collections.Immutable/8.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-AurL6Y5BA1WotzlEvVaIDpqzpIPvYnnldxru8oXJU2yFxFUy3+pNXjXd1ymO+RA0rq0+590Q8gaz2l3Sr7fmqg==",
+      "path": "system.collections.immutable/8.0.0",
+      "hashPath": "system.collections.immutable.8.0.0.nupkg.sha512"
     },
     "System.Diagnostics.DiagnosticSource/6.0.2": {
       "type": "package",

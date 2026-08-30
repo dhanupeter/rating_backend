@@ -55,3 +55,5 @@ D:\God\RatingBackend\Rating.API\obj\Debug\net8.0\refint\Rating.API.dll
 D:\God\RatingBackend\Rating.API\obj\Debug\net8.0\Rating.API.pdb
 D:\God\RatingBackend\Rating.API\obj\Debug\net8.0\Rating.API.genruntimeconfig.cache
 D:\God\RatingBackend\Rating.API\obj\Debug\net8.0\ref\Rating.API.dll
+D:\God\RatingBackend\Rating.API\bin\Debug\net8.0\FirebaseAdmin.dll
+D:\God\RatingBackend\Rating.API\bin\Debug\net8.0\Google.Api.Gax.Rest.dll

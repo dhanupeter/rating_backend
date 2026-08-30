@@ -1,4 +1,4 @@
-﻿namespace Rating.API.Models;
+namespace Rating.API.Models;
 
 public class UserProfile
 {
@@ -11,6 +11,7 @@ public class UserProfile
     public long VerifiedReviewsCount { get; set; } = 0;
     public long HelpfulVotesCount { get; set; } = 0;
     public List<string> Badges { get; set; } = new();
+    public bool IsVerified { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Counts by category
