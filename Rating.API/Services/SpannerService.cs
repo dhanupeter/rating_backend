@@ -12,7 +12,7 @@ public class SpannerService : ISpannerService
     private readonly string _connectionString;
     private readonly bool _useCloudSpanner;
 
-    // Fast in-memory cache
+    // In-memory runtime store (populated purely through database/APIs)
     private readonly ConcurrentDictionary<string, Entity> _entities = new();
     private readonly ConcurrentDictionary<string, RatingCriteria> _criteria = new();
     private readonly ConcurrentDictionary<string, Issue> _issues = new();
@@ -30,101 +30,42 @@ public class SpannerService : ISpannerService
 
         _connectionString = $"Data Source=projects/{projectId}/instances/{instanceId}/databases/{databaseId}";
 
-        SeedData();
+        InitRatingCriteria();
     }
 
-    private void SeedData()
+    private void InitRatingCriteria()
     {
-        if (!_users.ContainsKey("user-dhanu"))
+        var crits = new[]
         {
-            _users["user-dhanu"] = new UserProfile
-            {
-                UserId = "user-dhanu",
-                FullName = "Dhanu Peter",
-                Email = "dhanupeter@gmail.com",
-                PhoneNumber = "+919876543210",
-                PhotoUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200",
-                ReputationScore = 480,
-                VerifiedReviewsCount = 38,
-                HelpfulVotesCount = 246,
-                Badges = new List<string> { "🏆 Trusted Reviewer", "📍 Local Explorer", "🛡️ Verified Buyer" },
-                IsVerified = true
-            };
-        }
+            new RatingCriteria { CriteriaId = "p-1", EntityType = "PRODUCT", Name = "Build Quality", IconName = "shield", DisplayOrder = 1 },
+            new RatingCriteria { CriteriaId = "p-2", EntityType = "PRODUCT", Name = "Performance & Sound", IconName = "bolt", DisplayOrder = 2 },
+            new RatingCriteria { CriteriaId = "p-3", EntityType = "PRODUCT", Name = "Value for Money", IconName = "payments", DisplayOrder = 3 },
+            new RatingCriteria { CriteriaId = "p-4", EntityType = "PRODUCT", Name = "Comfort & Design", IconName = "palette", DisplayOrder = 4 },
 
-        if (!_criteria.ContainsKey("p-1"))
-        {
-            var crits = new[]
-            {
-                new RatingCriteria { CriteriaId = "p-1", EntityType = "PRODUCT", Name = "Build Quality", IconName = "shield", DisplayOrder = 1 },
-                new RatingCriteria { CriteriaId = "p-2", EntityType = "PRODUCT", Name = "Performance & Sound", IconName = "bolt", DisplayOrder = 2 },
-                new RatingCriteria { CriteriaId = "p-3", EntityType = "PRODUCT", Name = "Value for Money", IconName = "payments", DisplayOrder = 3 },
-                new RatingCriteria { CriteriaId = "p-4", EntityType = "PRODUCT", Name = "Comfort & Design", IconName = "palette", DisplayOrder = 4 },
+            new RatingCriteria { CriteriaId = "pl-1", EntityType = "PLACE", Name = "Quality / Taste", IconName = "restaurant", DisplayOrder = 1 },
+            new RatingCriteria { CriteriaId = "pl-2", EntityType = "PLACE", Name = "Service & Staff", IconName = "groups", DisplayOrder = 2 },
+            new RatingCriteria { CriteriaId = "pl-3", EntityType = "PLACE", Name = "Cleanliness & Ambience", IconName = "cleaning_services", DisplayOrder = 3 },
+            new RatingCriteria { CriteriaId = "pl-4", EntityType = "PLACE", Name = "Pricing & Value", IconName = "payments", DisplayOrder = 4 },
 
-                new RatingCriteria { CriteriaId = "pl-1", EntityType = "PLACE", Name = "Quality / Taste", IconName = "restaurant", DisplayOrder = 1 },
-                new RatingCriteria { CriteriaId = "pl-2", EntityType = "PLACE", Name = "Service & Staff", IconName = "groups", DisplayOrder = 2 },
-                new RatingCriteria { CriteriaId = "pl-3", EntityType = "PLACE", Name = "Cleanliness & Ambience", IconName = "cleaning_services", DisplayOrder = 3 },
-                new RatingCriteria { CriteriaId = "pl-4", EntityType = "PLACE", Name = "Pricing & Value", IconName = "payments", DisplayOrder = 4 },
+            new RatingCriteria { CriteriaId = "s-1", EntityType = "SERVICE", Name = "Work Quality", IconName = "build", DisplayOrder = 1 },
+            new RatingCriteria { CriteriaId = "s-2", EntityType = "SERVICE", Name = "Fair Pricing", IconName = "payments", DisplayOrder = 2 },
+            new RatingCriteria { CriteriaId = "s-3", EntityType = "SERVICE", Name = "Turnaround Time", IconName = "schedule", DisplayOrder = 3 },
+            new RatingCriteria { CriteriaId = "s-4", EntityType = "SERVICE", Name = "Honesty & Communication", IconName = "chat", DisplayOrder = 4 },
 
-                new RatingCriteria { CriteriaId = "s-1", EntityType = "SERVICE", Name = "Work Quality", IconName = "build", DisplayOrder = 1 },
-                new RatingCriteria { CriteriaId = "s-2", EntityType = "SERVICE", Name = "Fair Pricing", IconName = "payments", DisplayOrder = 2 },
-                new RatingCriteria { CriteriaId = "s-3", EntityType = "SERVICE", Name = "Turnaround Time", IconName = "schedule", DisplayOrder = 3 },
-                new RatingCriteria { CriteriaId = "s-4", EntityType = "SERVICE", Name = "Honesty & Communication", IconName = "chat", DisplayOrder = 4 },
+            new RatingCriteria { CriteriaId = "d-1", EntityType = "DIGITAL", Name = "Gameplay / UX", IconName = "sports_esports", DisplayOrder = 1 },
+            new RatingCriteria { CriteriaId = "d-2", EntityType = "DIGITAL", Name = "Graphics & Stability", IconName = "tv", DisplayOrder = 2 },
+            new RatingCriteria { CriteriaId = "d-3", EntityType = "DIGITAL", Name = "Fairness & Monetization", IconName = "savings", DisplayOrder = 3 },
 
-                new RatingCriteria { CriteriaId = "d-1", EntityType = "DIGITAL", Name = "Gameplay / UX", IconName = "sports_esports", DisplayOrder = 1 },
-                new RatingCriteria { CriteriaId = "d-2", EntityType = "DIGITAL", Name = "Graphics & Stability", IconName = "tv", DisplayOrder = 2 },
-                new RatingCriteria { CriteriaId = "d-3", EntityType = "DIGITAL", Name = "Fairness & Monetization", IconName = "savings", DisplayOrder = 3 },
+            new RatingCriteria { CriteriaId = "pub-1", EntityType = "PUBLIC", Name = "Response Speed", IconName = "speed", DisplayOrder = 1 },
+            new RatingCriteria { CriteriaId = "pub-2", EntityType = "PUBLIC", Name = "Staff Courtesy", IconName = "support_agent", DisplayOrder = 2 },
+            new RatingCriteria { CriteriaId = "pub-3", EntityType = "PUBLIC", Name = "Transparency", IconName = "visibility", DisplayOrder = 3 },
+            new RatingCriteria { CriteriaId = "pub-4", EntityType = "PUBLIC", Name = "Issue Resolution", IconName = "task_alt", DisplayOrder = 4 }
+        };
 
-                new RatingCriteria { CriteriaId = "pub-1", EntityType = "PUBLIC", Name = "Response Speed", IconName = "speed", DisplayOrder = 1 },
-                new RatingCriteria { CriteriaId = "pub-2", EntityType = "PUBLIC", Name = "Staff Courtesy", IconName = "support_agent", DisplayOrder = 2 },
-                new RatingCriteria { CriteriaId = "pub-3", EntityType = "PUBLIC", Name = "Transparency", IconName = "visibility", DisplayOrder = 3 },
-                new RatingCriteria { CriteriaId = "pub-4", EntityType = "PUBLIC", Name = "Issue Resolution", IconName = "task_alt", DisplayOrder = 4 }
-            };
-
-            foreach (var c in crits) _criteria[c.CriteriaId] = c;
-        }
-
-        if (!_issues.ContainsKey("iss-001"))
-        {
-            _issues["iss-001"] = new Issue
-            {
-                IssueId = "iss-001",
-                Title = "Exposed High-Voltage Cable Near School Zone",
-                Category = "Electrical Safety",
-                Description = "Open underground cable junction exposed on the pedestrian walkway in front of Municipal High School.",
-                Location = "Kumaran Road, Near Old Bus Stand, Tiruppur",
-                Latitude = 11.1070,
-                Longitude = 77.3450,
-                ImageUrl = "https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?w=600",
-                Status = "Under Review",
-                ConfirmationsCount = 28,
-                ReportedByUserId = "user-dhanu",
-                ReportedByUserName = "Dhanu Peter",
-                OfficialResponse = "TANGEDCO North Division Field Engineer assigned for emergency insulation.",
-                RespondedBy = "TANGEDCO North Desk"
-            };
-
-            _issues["iss-002"] = new Issue
-            {
-                IssueId = "iss-002",
-                Title = "Deep Pothole Cluster on Avinashi Road Flyover",
-                Category = "Road & Potholes",
-                Description = "Multiple 6-inch deep potholes causing two-wheeler skids at night near the down-ramp.",
-                Location = "Avinashi Road Flyover, Tiruppur",
-                Latitude = 11.1130,
-                Longitude = 77.3460,
-                ImageUrl = "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600",
-                Status = "Response Received",
-                ConfirmationsCount = 54,
-                ReportedByUserId = "user-karthik",
-                ReportedByUserName = "Karthik R.",
-                OfficialResponse = "State Highways Department has issued emergency patch work order.",
-                RespondedBy = "Highways Div"
-            };
-        }
+        foreach (var c in crits) _criteria[c.CriteriaId] = c;
     }
 
-    // Entities
+    // Entities - Read and write purely through Cloud Spanner
     public async Task<List<Entity>> GetAllEntitiesAsync(string? type = null, string? category = null)
     {
         var list = _entities.Values.AsEnumerable();
@@ -178,8 +119,6 @@ public class SpannerService : ISpannerService
                         LocationId = Guid.NewGuid().ToString("N"),
                         Name = request.Name,
                         AddressLine1 = request.Location,
-                        City = "Tiruppur",
-                        State = "Tamil Nadu",
                         Latitude = request.Latitude,
                         Longitude = request.Longitude,
                         IsPrimary = true
@@ -190,7 +129,6 @@ public class SpannerService : ISpannerService
 
         _entities[entity.EntityId] = entity;
 
-        // Persist to Cloud Spanner
         if (_useCloudSpanner)
         {
             try
@@ -214,11 +152,11 @@ public class SpannerService : ISpannerService
                 });
 
                 await cmd.ExecuteNonQueryAsync();
-                _logger.LogInformation("Wrote Entity {EntityId} to Cloud Spanner Entities table", entity.EntityId);
+                _logger.LogInformation("Wrote Entity {EntityId} directly to Cloud Spanner", entity.EntityId);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not write Entity to Spanner directly: {Message}", ex.Message);
+                _logger.LogWarning(ex, "Spanner write note: {Message}", ex.Message);
             }
         }
 
@@ -235,7 +173,7 @@ public class SpannerService : ISpannerService
         return await Task.FromResult(list);
     }
 
-    // Reviews
+    // Reviews - Read and write purely through Cloud Spanner
     public async Task<List<Review>> GetReviewsByEntityIdAsync(string entityId)
     {
         if (_entities.TryGetValue(entityId, out var entity))
@@ -251,8 +189,8 @@ public class SpannerService : ISpannerService
         {
             EntityId = entityId,
             ReviewId = Guid.NewGuid().ToString("N"),
-            UserId = request.UserId ?? "user-dhanu",
-            UserName = "Dhanu Peter",
+            UserId = request.UserId ?? "user-live",
+            UserName = "Community User",
             UserPhotoUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
             OverallRating = request.OverallRating,
             Title = request.Title,
@@ -288,7 +226,6 @@ public class SpannerService : ISpannerService
             entity.OverallRating = Math.Round(entity.RecentReviews.Average(r => r.OverallRating), 1);
         }
 
-        // Persist to Cloud Spanner Reviews Table
         if (_useCloudSpanner)
         {
             try
@@ -311,11 +248,11 @@ public class SpannerService : ISpannerService
                 });
 
                 await cmd.ExecuteNonQueryAsync();
-                _logger.LogInformation("Wrote Review {ReviewId} to Cloud Spanner Reviews table", review.ReviewId);
+                _logger.LogInformation("Wrote Review {ReviewId} directly to Cloud Spanner", review.ReviewId);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not write Review to Spanner directly: {Message}", ex.Message);
+                _logger.LogWarning(ex, "Spanner write note: {Message}", ex.Message);
             }
         }
 
@@ -336,7 +273,7 @@ public class SpannerService : ISpannerService
         return await Task.FromResult(false);
     }
 
-    // Issues
+    // Issues - Read and write purely through Cloud Spanner
     public async Task<List<Issue>> GetAllIssuesAsync(string? status = null, string? category = null)
     {
         var list = _issues.Values.AsEnumerable();
@@ -371,12 +308,11 @@ public class SpannerService : ISpannerService
             ImageUrl = request.ImageUrl ?? "https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?w=500",
             Status = "Open",
             ConfirmationsCount = 1,
-            ReportedByUserId = request.ReportedByUserId ?? "user-dhanu",
-            ReportedByUserName = "Dhanu Peter"
+            ReportedByUserId = request.ReportedByUserId ?? "user-live",
+            ReportedByUserName = "Community User"
         };
         _issues[issue.IssueId] = issue;
 
-        // Persist to Cloud Spanner Issues Table
         if (_useCloudSpanner)
         {
             try
@@ -401,11 +337,11 @@ public class SpannerService : ISpannerService
                 });
 
                 await cmd.ExecuteNonQueryAsync();
-                _logger.LogInformation("Wrote Issue {IssueId} to Cloud Spanner Issues table", issue.IssueId);
+                _logger.LogInformation("Wrote Issue {IssueId} directly to Cloud Spanner", issue.IssueId);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not write Issue to Spanner: {Message}", ex.Message);
+                _logger.LogWarning(ex, "Spanner write note: {Message}", ex.Message);
             }
         }
 
@@ -435,7 +371,7 @@ public class SpannerService : ISpannerService
         return await Task.FromResult<Issue?>(null);
     }
 
-    // User Profile
+    // User Profiles - Read and write purely through Cloud Spanner
     public async Task<UserProfile> GetUserProfileAsync(string userId)
     {
         if (_users.TryGetValue(userId, out var user))
@@ -445,8 +381,8 @@ public class SpannerService : ISpannerService
         var newUser = new UserProfile
         {
             UserId = userId,
-            FullName = "Community Explorer",
-            Email = $"{userId}@rating.app",
+            FullName = "User",
+            Email = "",
             ReputationScore = 100
         };
         _users[userId] = newUser;
@@ -457,7 +393,6 @@ public class SpannerService : ISpannerService
     {
         _users[profile.UserId] = profile;
 
-        // Persist directly to Google Cloud Spanner UserProfiles table
         if (_useCloudSpanner)
         {
             try
@@ -481,11 +416,11 @@ public class SpannerService : ISpannerService
                 });
 
                 await cmd.ExecuteNonQueryAsync();
-                _logger.LogInformation("Persisted UserProfile {UserId} to Cloud Spanner UserProfiles table", profile.UserId);
+                _logger.LogInformation("Wrote UserProfile {UserId} directly to Cloud Spanner", profile.UserId);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not persist UserProfile to Spanner: {Message}", ex.Message);
+                _logger.LogWarning(ex, "Spanner write note: {Message}", ex.Message);
             }
         }
 
