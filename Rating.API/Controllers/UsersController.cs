@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Rating.API.Models;
 using Rating.API.Services;
 
@@ -20,6 +20,17 @@ public class UsersController : ControllerBase
     {
         var profile = await _spannerService.GetUserProfileAsync(userId);
         return Ok(profile);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<UserProfile>> CreateUser([FromBody] UserProfile profile)
+    {
+        if (string.IsNullOrEmpty(profile.UserId))
+        {
+            profile.UserId = Guid.NewGuid().ToString("N");
+        }
+        var created = await _spannerService.UpdateUserProfileAsync(profile);
+        return CreatedAtAction(nameof(GetProfile), new { userId = created.UserId }, created);
     }
 
     [HttpPut("{userId}")]
